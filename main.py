@@ -104,7 +104,7 @@ class Bot(commands.Bot):
                 await users[0].timeout_user(token=confg['token'], moderator_id=self.user_id, user_id=users[1].id, duration=int(timeout_duration), reason='')
                 lib.log_action(f'Namess command used by {ctx.author.name} : {target} timeout {timeout_duration}s <{channel}>')
             except ioerr.HTTPException:
-                lib.log_action(f'Namess command used by {ctx.author.name} : target ({target}) was a moderator or a broadcaster <{channel}>')
+                lib.log_action(f'Namess command used by {ctx.author.name} : target ({target}) was a moderator or a broadcaster or was already banned <{channel}>')
                 return 1
 
     #Nunban command: unban user
@@ -114,10 +114,17 @@ class Bot(commands.Bot):
             if ctx.message.author.name in confg['authorized']:
                 split_msg = ctx.message.content.split(' ')
                 target = split_msg[1]
-                channel = ctx.channel.name
-
-                users = await bot.fetch_users(names=[channel, target])
-                await users[0].unban_user(token=confg['token'], moderator_id=self.user_id, user_id=users[1].id)
+                try:
+                    channel = split_msg[2]
+                except IndexError:
+                    channel = ctx.author.name
+                
+                try:
+                    users = await bot.fetch_users(names=[channel, target])
+                    await users[0].unban_user(token=confg['token'], moderator_id=self.user_id, user_id=users[1].id)
+                    lib.log_action(f'Nunban command used by {ctx.author.name} : target ({target}) <{channel}>')
+                except ioerr.HTTPException:
+                    lib.log_action(f'Nunban command used by {ctx.author.name} : target ({target}) was not banned <{channel}>')
 
 
 if __name__ == "__main__":
