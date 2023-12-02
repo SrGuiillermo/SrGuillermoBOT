@@ -6,14 +6,12 @@ import time
 
 def generate_default_conf():
     confg = {
-        "tmi" : "",
+        "token" : "",
         "channels" : [""],
         "authorized" : [""],
-        "propietary" : [""],
+        "admin" : [""],
         "slot" : [""],
-        "feiipito_count" : 0,
-        "word_list" : [],
-        "word_time" : 300
+        "gol_count" : [""],
         }
     with open("confg.json", "w") as f:
         json.dump(confg, f)
@@ -56,3 +54,28 @@ def all_off(all_commands, ctx: commands.Context):
 
     log_action(f"All commands turned off by {ctx.author.name}")
     return 0
+
+
+async def cooldown(command_on_cooldown, cooldown):
+    command_on_cooldown[-1] = True
+    await asyncio.sleep(cooldown)
+    command_on_cooldown[-1] = False
+
+
+def json_file_save(file_name, dic):
+    with open(file_name, "w") as f:
+        json.dump(dic, f)
+
+
+async def wait_for_response(self, ctx: commands.Context):
+    original_au = ctx.author.name
+    while True:
+        message = await self.wait_for("message")
+        try:
+            author = message[0].author.name
+            if author == original_au:
+                response = message[0].content.lower().split(" ")
+                break
+        except AttributeError:
+            pass
+    return response
