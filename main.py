@@ -120,14 +120,7 @@ class Bot(commands.Bot):
                     timeout_duration = 300
                     channel = ctx.channel.name
 
-            try: 
-                #Fetch channel and user to timeout
-                users = await bot.fetch_users(names=[channel, target]) 
-                #Timeout and log the action
-                await users[0].timeout_user(token=confg['token'], moderator_id=self.user_id, user_id=users[1].id, duration=int(timeout_duration), reason='')
-                lib.log_action(f'Namess command used by {ctx.author.name} : {target} timeout {timeout_duration}s <{channel}>')
-            except ioerr.HTTPException:
-                lib.log_action(f'Namess command used by {ctx.author.name} : target ({target}) was a moderator or a broadcaster or was already banned <{channel}>')
+                await lib.ban_user(self, ctx, bot, confg['token'], channel, target, timeout_duration, '', 'namess command')
 
     #Nunban command: unban user
     @commands.command()
@@ -163,32 +156,22 @@ class Bot(commands.Bot):
     async def slot(self, ctx: commands.Context):
         if commands_status['slot_com_status'][-1] == True:
             if commands_cooldowns['slot_on_cooldown'][-1] == False:
-                #Get win/lose 25% chance of win
-                slot_chance = random.randint(1, 4)
+                #Get win/lose 20% chance of win
+                slot_chance = random.randint(0, 4)
                 if slot_chance == 2: #if win
-                    slot_win = random.randint(0, len(confg["slot"]) - 1)
-                    await ctx.send('{} ㅤ👉 ㅤ[ {} | {} | {} ]ㅤ WIN Pog Esperando un usuario peepoEvil'
+                    slot_win = random.randint(0, len(confg["slot"])-1)
+                    await ctx.send('{} 👉 [ {} | {} | {} ] WIN Pog Esperando un usuario peepoEvil'
                                    .format(ctx.author.name, confg["slot"][slot_win], confg["slot"][slot_win], confg["slot"][slot_win]))
                     
                     timeout_user = await lib.wait_for_response(self, ctx)
-
-                    try:
-                        users = await bot.fetch_users(names=[ctx.channel.name, timeout_user[0]])
-                        await users[0].timeout_user(token=confg['token'], moderator_id=self.user_id, user_id=users[1].id, duration=300, reason='')
-                        lib.log_action(f'Slot command used by {ctx.author.name} (win) : target ({ctx.author.name}) <{ctx.channel.name}>')
-                    except ioerr.HTTPException:            
-                        lib.log_action(f'Slot command used by {ctx.author.name} (win) : target ({ctx.author.name}) was not banned <{ctx.channel.name}>')
+                    await lib.ban_user(self, ctx, bot, confg['token'], ctx.channel.name, timeout_user[0], 300, '', 'slot command win')
                 else: #if lose
-                    slot_random = random.sample(confg["slot"], 3)
-                    await ctx.send('{} ㅤ👉 ㅤ[ {} | {} | {} ]ㅤ LOSE -1m PepeGiggle'
+                    slot_random = random.sample(confg['slot'], 2)
+                    slot_random.append(confg['slot'][random.randint(0, len(confg['slot'])-1)])
+                    await ctx.send('{} ㅤ👉 [ {} | {} | {} ] LOSE -1m PepeGiggle'
                                    .format(ctx.author.name, slot_random[0], slot_random[1], slot_random[2]))
                     
-                    try:
-                        users = await bot.fetch_users(names=[ctx.channel.name, ctx.author.name])
-                        await users[0].timeout_user(token=confg['token'], moderator_id=self.user_id, user_id=users[1].id, duration=60, reason='')
-                        lib.log_action(f'Slot command used by {ctx.author.name} (lose) <{ctx.channel.name}>')
-                    except ioerr.HTTPException:
-                        lib.log_action(f'Slot command used by {ctx.author.name} (lose) : target was not banned <{ctx.channel.name}>')
+                    await lib.ban_user(self, ctx, bot, confg['token'], ctx.channel.name, ctx.author.name, 60, '', 'slot command lose')
 
                 await lib.cooldown(commands_cooldowns["slot_on_cooldown"], 15) 
 
