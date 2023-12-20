@@ -57,10 +57,10 @@ def all_off(all_commands, ctx: commands.Context):
     return 0
 
 
-async def cooldown(command_on_cooldown, cooldown):
-    command_on_cooldown[-1] = True
-    await asyncio.sleep(cooldown)
-    command_on_cooldown[-1] = False
+async def cooldown(command_on_cooldown):
+    command_on_cooldown[0] = True
+    await asyncio.sleep(command_on_cooldown[1])
+    command_on_cooldown[0] = False
 
 
 def json_file_save(file_name, dic):
@@ -68,18 +68,20 @@ def json_file_save(file_name, dic):
         json.dump(dic, f)
 
 
-async def wait_for_response(self, ctx: commands.Context):
-    original_au = ctx.author.name
+async def wait_for_response(self, ctx: commands.Context, user_to_wait):
     while True:
         message = await self.wait_for('message')
         try:
             author = message[0].author.name
-            if author == original_au:
+            if author == user_to_wait:
                 response = message[0].content.lower().split(' ')
                 break
         except AttributeError:
             pass
+        except TimeoutError:
+            return None
     return response
+
 
 async def ban_user(self, ctx: commands.Context, bot, token: str, channel: str, user: str, duration: int, reason: str, command: str):
     try:
