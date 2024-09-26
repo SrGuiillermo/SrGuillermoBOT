@@ -113,7 +113,7 @@ class Bot(commands.Bot):
         if commands_status['namess_com_status'][0] == True:
             if ctx.message.author.name in confg['authorized']:
                 split_msg = ctx.message.content.split(' ')
-                target = split_msg[1]
+                target = split_msg[1].strip('@')
                 default_timeout = 300
                 try:  #$namess {user} {duration} {channel} form
                     timeout_duration = split_msg[2]
@@ -139,7 +139,7 @@ class Bot(commands.Bot):
         if commands_status['namess_com_status'][0] == True:
             if ctx.message.author.name in confg['authorized']:
                 split_msg = ctx.message.content.split(' ')
-                target = split_msg[1]
+                target = split_msg[1].strip('@')
                 try:
                     channel = split_msg[2]
                 except IndexError:
@@ -180,7 +180,18 @@ class Bot(commands.Bot):
                                    .format(ctx.author.name, confg['slot'][slot_win], confg['slot'][slot_win], confg['slot'][slot_win]))
                     
                     timeout_user = await lib.wait_for_response(self, ctx, ctx.author.name)
-                    await lib.ban_user(self, ctx, bot, confg['token'], ctx.channel.name, timeout_user[0], win_timeout, '', 'slot command win')
+                    
+                    await lib.ban_user(
+                        self, 
+                        ctx, 
+                        bot, 
+                        confg['token'], 
+                        ctx.channel.name, 
+                        timeout_user[0].strip('@'), 
+                        win_timeout, 
+                        '', 
+                        'slot command win')
+                    
                 else: #if lose
                     slot_random = random.sample(confg['slot'], 2)
                     slot_random.append(confg['slot'][random.randint(0, len(confg['slot'])-1)])
@@ -199,7 +210,7 @@ class Bot(commands.Bot):
             if commands_cooldowns['duel_on_cooldown'][0] == False:
                 split_msg = ctx.message.content.split(' ')
                 user_duel = [ctx.message.author.name, split_msg[1].strip('@')]
-                max_timeout = 3600
+                max_timeout = 900
 
                 try:
 
@@ -221,19 +232,42 @@ class Bot(commands.Bot):
                     
                     if response[0] == 'deny': await ctx.send('El duelo fue rechazado')
                     elif response[0] == 'accept':
-                        roll = random.randint(0, 1)
+                        roll = random.randint(0, 100)
                         
-                        await lib.ban_user(
+                        if roll <= 48:
+                            await lib.ban_user(
                             self, ctx, bot, confg['token'], 
-                            ctx.channel.name, user_duel[roll], 
+                            ctx.channel.name, user_duel[0], 
                             int(split_msg[2]), 
                             '', 
-                            'duel command')                
+                            'duel command')    
+                        elif roll > 48 and roll <= 97:
+                            await lib.ban_user(
+                            self, ctx, bot, confg['token'], 
+                            ctx.channel.name, user_duel[1], 
+                            int(split_msg[2]), 
+                            '', 
+                            'duel command') 
+                        elif roll > 97:
+                            await lib.ban_user(
+                            self, ctx, bot, confg['token'], 
+                            ctx.channel.name, user_duel[0], 
+                            int(split_msg[2]), 
+                            '', 
+                            'duel command')
+
+                            await lib.ban_user(
+                            self, ctx, bot, confg['token'], 
+                            ctx.channel.name, user_duel[1], 
+                            int(split_msg[2]), 
+                            '', 
+                            'duel command')                    
                 
                 except IndexError:
                     await ctx.send('Estructura del comando: $duel <usuario a desafiar> <segundos>')
                 except ValueError:
                     await ctx.send('Introduce el tiempo en segundos')
+                except TypeError: pass
 
             await lib.cooldown(commands_cooldowns['duel_on_cooldown'])
 
